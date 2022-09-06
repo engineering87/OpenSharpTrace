@@ -1,0 +1,16 @@
+CREATE TABLE [dbo].[Trace](
+	[Id] [bigint] IDENTITY(1,1) NOT NULL,
+	[TransactionId] [nvarchar](36) NULL,
+	[ServerId] [nvarchar](MAX) NULL,
+	[ClientId] [nvarchar](MAX) NULL,
+	[HttpMethod] [nvarchar](7) NULL,
+	[HttpPath] [nvarchar](MAX) NULL,
+	[HttpStatusCode] [int] NULL,
+	[ActionDescriptor] [nvarchar](MAX) NULL,
+	[RemoteAddress] [nvarchar](MAX) NULL,
+	[JsonRequest] [nvarchar](MAX) NULL,
+	[JsonResponse] [nvarchar](MAX) NULL,
+	[TimeStamp] [datetime2](7) NULL,
+	[Exception] [nvarchar](MAX) NULL,
+	[ExecutionTime] [numeric] NULL,
+) ON [PRIMARY]
