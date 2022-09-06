@@ -1,17 +1,14 @@
 ﻿// (c) 2022 Francesco Del Re <francesco.delre.87@gmail.com>
 // This code is licensed under MIT license (see LICENSE.txt for details)
-using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.Json;
 
 namespace OpenSharpTrace.Utilities
 {
     public static class Serialization
     {
-        /// <summary>
-        /// Extension method for object JSON serialization
-        /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
+        private const string empyJson = "{}";
+
         public static string ToJson(this object value)
         {
             if (value == null) return empyJson;
@@ -29,13 +26,11 @@ namespace OpenSharpTrace.Utilities
                 if (string.IsNullOrEmpty(result))
                     return empyJson;
                 return result;
-            } 
+            }
             catch
             {
                 return empyJson;
             }
         }
-
-        private const string empyJson = "{}";
     }
 }

@@ -2,7 +2,6 @@
 // This code is licensed under MIT license (see LICENSE.txt for details)
 using Microsoft.EntityFrameworkCore;
 using OpenSharpTrace.Persistence.SQL.Entities;
-using System;
 
 namespace OpenSharpTrace.Persistence.SQL
 {

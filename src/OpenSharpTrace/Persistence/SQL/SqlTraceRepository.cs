@@ -3,11 +3,10 @@
 using Microsoft.Extensions.Logging;
 using OpenSharpTrace.Abstractions.Persistence;
 using OpenSharpTrace.Persistence.SQL.Entities;
-using System;
 
 namespace OpenSharpTrace.Persistence.SQL
 {
-    public class SqlTraceRepository : ISqlTraceRepository
+    public class SqlTraceRepository : ISqlTraceRepository//, IRepository<Trace>
     {
         private readonly TraceContext _context;
 
@@ -19,10 +18,11 @@ namespace OpenSharpTrace.Persistence.SQL
             _logger = loggerFactory.CreateLogger(GetType().ToString());
         }
 
-        /// <summary>
-        /// Write the current trace
-        /// </summary>
-        /// <param name="entity"></param>
+        //public SqlTraceRepository(SqlConfig sqlConfig)
+        //{
+        //    // TODO
+        //}
+
         public void Insert(Trace entity)
         {
             try
@@ -30,7 +30,7 @@ namespace OpenSharpTrace.Persistence.SQL
                 _context.Trace.Add(entity);
                 _context.SaveChanges();
             }
-            catch (Exception ex)
+            catch(Exception ex)
             {
                 _logger?.LogError(ex.Message);
             }

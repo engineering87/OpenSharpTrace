@@ -1,11 +1,9 @@
-﻿// (c) 2022 Francesco Del Re <francesco.delre.87@gmail.com>
+// (c) 2022 Francesco Del Re <francesco.delre.87@gmail.com>
 // This code is licensed under MIT license (see LICENSE.txt for details)
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
-using NUnit.Framework;
 using OpenSharpTrace.Persistence.SQL;
 using OpenSharpTrace.Persistence.SQL.Entities;
-using System;
 using System.Net;
 
 namespace OpenSharpTrace.Test.SQL
@@ -25,9 +23,7 @@ namespace OpenSharpTrace.Test.SQL
                 RemoteAddress = "127.0.0.1",
                 JsonRequest = "{}",
                 JsonResponse = "{}",
-                TimeStamp = DateTime.UtcNow,
-                ActionDescriptor = "test_action_descriptor",
-                Exception = string.Empty
+                TimeStamp = DateTime.UtcNow
             });
             db.SaveChanges();
         }
@@ -44,9 +40,7 @@ namespace OpenSharpTrace.Test.SQL
                 RemoteAddress = "127.0.0.1",
                 JsonRequest = "{}",
                 JsonResponse = "{}",
-                TimeStamp = DateTime.UtcNow,
-                ActionDescriptor = "test_action_descriptor",
-                Exception = string.Empty
+                TimeStamp = DateTime.UtcNow
             };
             var processor = new SqlTraceRepository(NullLoggerFactory.Instance, db);
 

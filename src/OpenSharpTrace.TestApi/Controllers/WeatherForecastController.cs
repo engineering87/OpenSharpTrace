@@ -1,10 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Mvc;
 using OpenSharpTrace.Abstractions.Persistence;
 using OpenSharpTrace.Controllers;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace OpenSharpTrace.TestApi.Controllers
 {
@@ -17,40 +13,38 @@ namespace OpenSharpTrace.TestApi.Controllers
             "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
         };
 
-        private readonly ILogger<WeatherForecastController> _logger;
+        private readonly ILogger _logger;
 
-        // OpenSharpTrace integration for ISqlTraceRepository
+        // TODO spostare la DI del ISqlTraceRepository solo all'interno del controller OpenSharpTraceController
 
         public WeatherForecastController(
-            ILogger<WeatherForecastController> logger, 
-            ISqlTraceRepository repository) : base(logger, repository)
+            ILoggerFactory loggerFactory, 
+            ISqlTraceRepository repository) : base(loggerFactory, repository)
         {
-            _logger = logger;
+            _logger = loggerFactory.CreateLogger(GetType().ToString());
         }
 
-        [HttpGet]
-        [Route("/Get")]
+        [HttpGet(Name = "GetWeatherForecast")]
         public IEnumerable<WeatherForecast> Get()
         {
-            var rng = new Random();
             return Enumerable.Range(1, 5).Select(index => new WeatherForecast
             {
                 Date = DateTime.Now.AddDays(index),
-                TemperatureC = rng.Next(-20, 55),
-                Summary = Summaries[rng.Next(Summaries.Length)]
+                TemperatureC = Random.Shared.Next(-20, 55),
+                Summary = Summaries[Random.Shared.Next(Summaries.Length)]
             })
             .ToArray();
         }
 
         [HttpGet]
-        [Route("/GetBadRequest")]
+        [HttpGet(Name = "GetBadRequest")]
         public IActionResult GetBadRequest()
         {
             return BadRequest("");
         }
 
         [HttpGet]
-        [Route("/GetException")]
+        [HttpGet(Name = "GetException")]
         public IActionResult GetException()
         {
             throw new Exception("Generic exception");
