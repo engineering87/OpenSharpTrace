@@ -53,7 +53,7 @@ namespace OpenSharpTrace.Test.SQL
             Assert.DoesNotThrow(() => processor.Insert(trace));
         }
 
-        public TraceContext GetMemoryContext()
+        public static TraceContext GetMemoryContext()
         {
             var options = new DbContextOptionsBuilder<TraceContext>()
                 .UseInMemoryDatabase(databaseName: "InMemoryDatabase")

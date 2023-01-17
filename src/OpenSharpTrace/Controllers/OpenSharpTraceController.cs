@@ -72,7 +72,7 @@ namespace OpenSharpTrace.Controllers
             var httpMethod = context.HttpContext?.Request.Method;
             var httpPath = context.HttpContext?.Request.Path;
             var actionDescriptor = context.ActionDescriptor?.DisplayName;
-            var remoteAddress = context.HttpContext?.Connection.RemoteIpAddress?.ToString();
+            var remoteAddress = Network.CleanNotationAddress(context.HttpContext?.Connection.RemoteIpAddress?.ToString());
             var host = context.HttpContext?.Request.Host.ToString();
             var exception = context.Exception?.Message;
             var httpStatusCode = objectResult?.StatusCode ?? (int)HttpStatusCode.OK;
