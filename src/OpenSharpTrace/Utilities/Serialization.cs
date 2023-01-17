@@ -10,7 +10,7 @@ namespace OpenSharpTrace.Utilities
         /// <summary>
         /// Extension method for object JSON serialization
         /// </summary>
-        /// <param name="value"></param>
+        /// <param name="value">Object to serialize</param>
         /// <returns></returns>
         public static string ToJson(this object value)
         {
