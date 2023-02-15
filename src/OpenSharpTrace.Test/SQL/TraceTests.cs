@@ -6,6 +6,7 @@ using NUnit.Framework;
 using OpenSharpTrace.Persistence.SQL;
 using OpenSharpTrace.Persistence.SQL.Entities;
 using System;
+using System.Collections.Generic;
 using System.Net;
 
 namespace OpenSharpTrace.Test.SQL
@@ -33,24 +34,36 @@ namespace OpenSharpTrace.Test.SQL
         }
 
         [Test]
-        public void CanAddTrace()
+        public void CanAddManyTrace()
         {
             var db = GetMemoryContext();
-            var trace = new Trace
+            var traceFirst = new Trace
             {
-                HttpPath = "/AddTraceTest",
+                HttpPath = "/AddManyTrace",
                 HttpStatusCode = (int)HttpStatusCode.OK,
-                HttpMethod = "Test",
+                HttpMethod = "Test1",
                 RemoteAddress = "127.0.0.1",
                 JsonRequest = "{}",
                 JsonResponse = "{}",
                 TimeStamp = DateTime.UtcNow,
-                ActionDescriptor = "test_action_descriptor",
+                ActionDescriptor = "test_action_descriptor1",
+                Exception = string.Empty
+            };
+            var traceSecond = new Trace
+            {
+                HttpPath = "/AddManyTrace",
+                HttpStatusCode = (int)HttpStatusCode.OK,
+                HttpMethod = "Test2",
+                RemoteAddress = "127.0.0.1",
+                JsonRequest = "{}",
+                JsonResponse = "{}",
+                TimeStamp = DateTime.UtcNow,
+                ActionDescriptor = "test_action_descriptor2",
                 Exception = string.Empty
             };
             var processor = new SqlTraceRepository(NullLoggerFactory.Instance, db);
 
-            Assert.DoesNotThrow(() => processor.Insert(trace));
+            Assert.DoesNotThrow(() => processor.InsertMany(new List<Trace> { traceFirst, traceSecond }));
         }
 
         public static TraceContext GetMemoryContext()

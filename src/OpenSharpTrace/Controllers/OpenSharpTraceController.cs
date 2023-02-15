@@ -3,8 +3,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Logging;
-using OpenSharpTrace.Abstractions.Persistence;
 using OpenSharpTrace.Persistence.SQL.Entities;
+using OpenSharpTrace.TraceQueue;
 using OpenSharpTrace.Utilities;
 using System;
 using System.Linq;
@@ -13,11 +13,11 @@ using System.Net;
 namespace OpenSharpTrace.Controllers
 {
     /// <summary>
-    /// OpenSharpTrace base controller
+    /// OpenSharpTrace base controller. Traces will be persist every minute in a single transaction.
     /// </summary>
     public class OpenSharpTraceController : Controller
     {
-        private readonly ISqlTraceRepository _repository;
+        private readonly ITraceQueue<Trace> _transactionQueue;
 
         private readonly ILogger _logger;
 
@@ -26,16 +26,20 @@ namespace OpenSharpTrace.Controllers
         private const string TransactionKey = "TRANSACTION";
         private const string ConsumerKey = "CONSUMER";
 
-        public OpenSharpTraceController(ILogger logger, ISqlTraceRepository repository)
+        public OpenSharpTraceController(
+            ILogger logger,
+            ITraceQueue<Trace> transactionQueue)
         {
-            _repository = repository;
             _logger = logger;
+            _transactionQueue = transactionQueue;
         }
 
-        public OpenSharpTraceController(ILoggerFactory loggerFactory, ISqlTraceRepository repository)
+        public OpenSharpTraceController(
+            ILoggerFactory loggerFactory,
+            ITraceQueue<Trace> transactionQueue)
         {
-            _repository = repository;
             _logger = loggerFactory.CreateLogger(GetType().ToString());
+            _transactionQueue = transactionQueue;
         }
 
         /// <summary>
@@ -72,7 +76,7 @@ namespace OpenSharpTrace.Controllers
             var httpMethod = context.HttpContext?.Request.Method;
             var httpPath = context.HttpContext?.Request.Path;
             var actionDescriptor = context.ActionDescriptor?.DisplayName;
-            var remoteAddress = Network.CleanNotationAddress(context.HttpContext?.Connection.RemoteIpAddress?.ToString());
+            var remoteAddress = context.HttpContext?.Connection.RemoteIpAddress?.ToString();
             var host = context.HttpContext?.Request.Host.ToString();
             var exception = context.Exception?.Message;
             var httpStatusCode = objectResult?.StatusCode ?? (int)HttpStatusCode.OK;
@@ -100,7 +104,8 @@ namespace OpenSharpTrace.Controllers
                 Exception = exception,
                 ExecutionTime = totalExecutionTime
             };
-            _repository.Insert(trace);
+
+            _transactionQueue.Enqueue(trace);
 
             base.OnActionExecuted(context);
         }
