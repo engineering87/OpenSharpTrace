@@ -1,7 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using OpenSharpTrace.Abstractions.Persistence;
 using OpenSharpTrace.Controllers;
+using OpenSharpTrace.Persistence.SQL.Entities;
+using OpenSharpTrace.TraceQueue;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,11 +20,11 @@ namespace OpenSharpTrace.TestApi.Controllers
 
         private readonly ILogger<WeatherForecastController> _logger;
 
-        // OpenSharpTrace integration for ISqlTraceRepository
+        // OpenSharpTrace integration for ITraceQueue
 
         public WeatherForecastController(
-            ILogger<WeatherForecastController> logger, 
-            ISqlTraceRepository repository) : base(logger, repository)
+            ILogger<WeatherForecastController> logger,
+            ITraceQueue<Trace> transactionQueue) : base(logger, transactionQueue)
         {
             _logger = logger;
         }

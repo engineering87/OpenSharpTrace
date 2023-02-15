@@ -1,9 +1,11 @@
 ﻿// (c) 2022 Francesco Del Re <francesco.delre.87@gmail.com>
 // This code is licensed under MIT license (see LICENSE.txt for details)
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using OpenSharpTrace.Abstractions.Persistence;
 using OpenSharpTrace.Persistence.SQL.Entities;
 using System;
+using System.Collections.Generic;
 
 namespace OpenSharpTrace.Persistence.SQL
 {
@@ -20,15 +22,27 @@ namespace OpenSharpTrace.Persistence.SQL
         }
 
         /// <summary>
-        /// Write the current trace
+        /// Write the current trace entities
         /// </summary>
-        /// <param name="entity"></param>
-        public void Insert(Trace entity)
+        /// <param name="entities"></param>
+        public void InsertMany(List<Trace> entities)
         {
             try
             {
-                _context.Trace.Add(entity);
-                _context.SaveChanges();
+                var strategy = _context.Database.CreateExecutionStrategy();
+
+                strategy.Execute(() =>
+                {
+                    using (var transaction = _context.Database.BeginTransaction())
+                    {
+                        foreach (var entity in entities)
+                        {
+                            _context.Trace.Add(entity);
+                        }
+                        _context.SaveChanges();
+                        transaction.Commit();
+                    }                    
+                });
             }
             catch (Exception ex)
             {
