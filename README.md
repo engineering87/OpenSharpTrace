@@ -51,7 +51,20 @@ public class WeatherForecastController : OpenSharpTraceController
 each controller must implement the following constructor, for example:
 
 ```csharp
-public WeatherForecastController(ILoggerFactory loggerFactory, ISqlTraceRepository repository) 
+public WeatherForecastController(
+	ILogger<WeatherForecastController> logger,
+	ITraceQueue<Trace> transactionQueue) : base(logger, transactionQueue)
+{
+	_logger = logger;
+}
+```
+
+for older version of the library (2.0.0 or above):
+
+```csharp
+public WeatherForecastController(
+	ILoggerFactory loggerFactory, 
+	ISqlTraceRepository repository) 
 : base(loggerFactory, repository)
 {
     _logger = loggerFactory.CreateLogger(GetType().ToString());
@@ -111,11 +124,9 @@ CREATE TABLE [dbo].[Trace](
 
 Remember to populate the **TraceDb** key within the connection strings config file.
 
-#### MongoDB  (work in progress)
+#### MongoDB (not available)
 
-MongoDB integration is currently under development.
-
-More connectors will be added in future releases.
+Integration with MongoDB is work in progress.
 
 ### NuGet
 

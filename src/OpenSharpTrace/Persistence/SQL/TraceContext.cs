@@ -15,7 +15,15 @@ namespace OpenSharpTrace.Persistence.SQL
         public TraceContext(DbContextOptions options)
             : base(options)
         {
-            Database.EnsureCreated();
+            try
+            {
+                Database.EnsureCreated();
+            }
+            catch
+            {
+                // database is not ready or the connectionstring is wrong
+                // ignore
+            }
         }
 
         public virtual DbSet<Trace> Trace { get; set; }
