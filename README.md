@@ -1,6 +1,6 @@
 # OpenSharpTrace
 
-OpenSharpTrace is a C# .NET 6 library that allows extending any WebApi controller to automate a custom trace and observability of REST APIs in microservices environment. 
+OpenSharpTrace is a C# .NET library that allows extending any WebApi controller to automate a custom trace and observability of REST APIs in microservices environment. 
 
 ### How it works
 OpenSharpTrace implements a custom controller which overrides the *OnActionExecuting* and *OnActionExecuted* events to retrieve request and response and encapsulates them in a **Trace** object which will persist through different connectors, such as SQL or MongoDB.
