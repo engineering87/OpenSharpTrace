@@ -1,3 +1,6 @@
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Nuget](https://img.shields.io/nuget/v/OpenSharpTrace?style=plastic)](https://www.nuget.org/packages/OpenSharpTrace)
+
 # OpenSharpTrace
 
 OpenSharpTrace is a C# .NET library that allows extending any WebApi controller to automate a custom trace and observability of REST APIs in microservices environment. 
