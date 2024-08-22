@@ -1,13 +1,14 @@
+# OpenSharpTrace
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Nuget](https://img.shields.io/nuget/v/OpenSharpTrace?style=plastic)](https://www.nuget.org/packages/OpenSharpTrace)
-
-# OpenSharpTrace
+[![issues - dotnet-design-patterns](https://img.shields.io/github/issues/engineering87/OpenSharpTrace)](https://github.com/engineering87/OpenSharpTrace/issues)
+[![stars - dotnet-design-patterns](https://img.shields.io/github/stars/engineering87/OpenSharpTrace?style=social)](https://github.com/engineering87/OpenSharpTrace)
 
 OpenSharpTrace is a C# .NET library that allows extending any WebApi controller to automate a custom trace and observability of REST APIs in microservices environment. 
 
 ### How it works
-OpenSharpTrace implements a custom controller which overrides the *OnActionExecuting* and *OnActionExecuted* events to retrieve request and response and encapsulates them in a **Trace** object which will persist through different connectors, such as SQL or MongoDB.
-All the information useful for tracing both request and response will be automatically persisted, in details:
+OpenSharpTrace implements a custom controller that overrides the `OnActionExecuting` and `OnActionExecuted` events to capture the request and response data. These are then encapsulated in a Trace object, which can be persisted across different connectors, such as SQL or MongoDB. All the relevant information needed for tracing both the request and response is automatically persisted, in details:
 
 * **TransactionId**: identifier associated with the request (retrieved from the header).
 * **ServerId**: name of the server.
@@ -26,8 +27,8 @@ All the information useful for tracing both request and response will be automat
 **TransactionId** and **ConsumerId** retrieved from the header should be enhanced by the client to allow a possible correlations between calls.
 In order to enhance the two parameters, client will have to add the followuing header keys:
 
-* TRANSACTION for TransactionId
-* CONSUMER for ClientId
+* `TRANSACTION` for TransactionId
+* `CONSUMER` for ClientId
 
 for example:
 
@@ -127,7 +128,7 @@ CREATE TABLE [dbo].[Trace](
 
 Remember to populate the **TraceDb** key within the connection strings config file.
 
-#### MongoDB (not available)
+#### MongoDB
 
 Integration with MongoDB is work in progress.
 
@@ -137,15 +138,12 @@ The library is available on NuGet packetmanager.
 
 https://www.nuget.org/packages/OpenSharpTrace/
 
-### Contributing
+## Contributing
 Thank you for considering to help out with the source code!
 If you'd like to contribute, please fork, fix, commit and send a pull request for the maintainers to review and merge into the main code base.
 
-**Getting started with Git and GitHub**
-
- * [Setting up Git for Windows and connecting to GitHub](http://help.github.com/win-set-up-git/)
- * [Forking a GitHub repository](http://help.github.com/fork-a-repo/)
- * [The simple guide to GIT guide](http://rogerdudler.github.com/git-guide/)
+ * [Setting up Git](https://docs.github.com/en/get-started/getting-started-with-git/set-up-git)
+ * [Fork the repository](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo)
  * [Open an issue](https://github.com/engineering87/OpenSharpTrace/issues) if you encounter a bug or have a suggestion for improvements/features
 
 ### Licensee
