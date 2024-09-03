@@ -3,6 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Nuget](https://img.shields.io/nuget/v/OpenSharpTrace?style=plastic)](https://www.nuget.org/packages/OpenSharpTrace)
 [![issues - dotnet-design-patterns](https://img.shields.io/github/issues/engineering87/OpenSharpTrace)](https://github.com/engineering87/OpenSharpTrace/issues)
+[![Build](https://github.com/engineering87/OpenSharpTrace/actions/workflows/dotnet.yml/badge.svg)](https://github.com/engineering87/OpenSharpTrace/actions/workflows/dotnet.yml)
 [![stars - dotnet-design-patterns](https://img.shields.io/github/stars/engineering87/OpenSharpTrace?style=social)](https://github.com/engineering87/OpenSharpTrace)
 
 OpenSharpTrace is a C# .NET library that allows extending any WebApi controller to automate a custom trace and observability of REST APIs in microservices environment. 
