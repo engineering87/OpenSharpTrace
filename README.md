@@ -78,23 +78,10 @@ public WeatherForecastController(
 You also need to register the OpenSharpTrace middleware.
 To do this, add the following configurations under WebApplicationBuilder:
 
-**.NET 5**:
-
 ```csharp
 using OpenSharpTrace.Middleware;
 
-// in Startup.cs ConfigureServices
 services.RegisterOpenSharpTrace();
-// ...
-```
-
-**.NET 6**:
-
-```csharp
-using OpenSharpTrace.Middleware;
-
-// in Program.cs
-builder.Services.RegisterOpenSharpTrace();
 // ...
 ```
 
@@ -126,17 +113,13 @@ CREATE TABLE [dbo].[Trace](
 ) ON [PRIMARY]
 ```
 
-Remember to populate the **TraceDb** key within the connection strings config file.
+Remember to populate the **TraceDb** key within the SQL connection strings config file:
 
-#### MongoDB
-
-Integration with MongoDB is work in progress.
-
-### NuGet
-
-The library is available on NuGet packetmanager.
-
-https://www.nuget.org/packages/OpenSharpTrace/
+```xml
+  "ConnectionStrings": {
+    "TraceDb": "Server=(***;Database=***;Trusted_Connection=True;MultipleActiveResultSets=true"
+  },
+```
 
 ## Contributing
 Thank you for considering to help out with the source code!
