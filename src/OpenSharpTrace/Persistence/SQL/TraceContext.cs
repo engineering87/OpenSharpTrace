@@ -40,7 +40,11 @@ namespace OpenSharpTrace.Persistence.SQL
             {
                 try
                 {
-                    connection.Open();
+                    if (connection.State != System.Data.ConnectionState.Open)
+                    {
+                        connection.Open();
+                    }
+
                     using (var command = connection.CreateCommand())
                     {
                         command.CommandText = @"

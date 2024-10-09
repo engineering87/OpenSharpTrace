@@ -17,7 +17,7 @@ namespace OpenSharpTrace.Persistence.SQL
 
         public SqlTraceRepository(ILoggerFactory loggerFactory, TraceContext context)
         {
-            _context = context;
+            _context = context ?? throw new ArgumentNullException(nameof(context));
             _logger = loggerFactory.CreateLogger(GetType().ToString());
         }
 
@@ -27,6 +27,11 @@ namespace OpenSharpTrace.Persistence.SQL
         /// <param name="entities"></param>
         public void InsertMany(List<Trace> entities)
         {
+            if (entities == null || entities.Count == 0)
+            {
+                return;
+            }
+
             try
             {
                 var strategy = _context.Database.CreateExecutionStrategy();
