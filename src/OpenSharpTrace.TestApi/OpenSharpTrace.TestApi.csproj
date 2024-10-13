@@ -4,6 +4,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <UserSecretsId>d2c09af8-66e1-4581-89df-935842dd6161</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+	<IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
