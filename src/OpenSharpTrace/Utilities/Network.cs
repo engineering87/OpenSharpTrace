@@ -11,7 +11,7 @@ namespace OpenSharpTrace.Utilities
         /// <returns></returns>
         public static string CleanNotationAddress(string address)
         {            
-            if (address?.Substring(0, 7) == "::ffff:")
+            if (address?[..7] == "::ffff:")
             {
                 return address.Substring(7);
             }

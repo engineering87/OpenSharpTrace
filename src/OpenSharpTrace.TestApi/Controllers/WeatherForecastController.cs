@@ -20,6 +20,8 @@ namespace OpenSharpTrace.TestApi.Controllers
 
         private readonly ILogger<WeatherForecastController> _logger;
 
+        private static readonly List<WeatherForecast> WeatherForecasts = new List<WeatherForecast>();
+
         // OpenSharpTrace integration for ITraceQueue
 
         public WeatherForecastController(
@@ -44,6 +46,18 @@ namespace OpenSharpTrace.TestApi.Controllers
         }
 
         [HttpGet]
+        [Route("/GetById/{id}")]
+        public IActionResult GetById(int id)
+        {
+            if (id < 0 || id >= WeatherForecasts.Count)
+            {
+                return NotFound("Forecast not found.");
+            }
+
+            return Ok(WeatherForecasts[id]);
+        }
+
+        [HttpGet]
         [Route("/GetBadRequest")]
         public IActionResult GetBadRequest()
         {
@@ -55,6 +69,45 @@ namespace OpenSharpTrace.TestApi.Controllers
         public IActionResult GetException()
         {
             throw new Exception("Generic exception");
+        }
+
+        [HttpPost]
+        [Route("/Add")]
+        public IActionResult Add([FromBody] WeatherForecast forecast)
+        {
+            if (forecast == null)
+            {
+                return BadRequest("Invalid forecast data.");
+            }
+
+            WeatherForecasts.Add(forecast);
+            return CreatedAtAction(nameof(GetById), new { id = WeatherForecasts.Count - 1 }, forecast);
+        }
+
+        [HttpPut]
+        [Route("/Update/{id}")]
+        public IActionResult Update(int id, [FromBody] WeatherForecast forecast)
+        {
+            if (id < 0 || id >= WeatherForecasts.Count || forecast == null)
+            {
+                return BadRequest("Invalid forecast data or ID.");
+            }
+
+            WeatherForecasts[id] = forecast;
+            return NoContent(); // 204 No Content
+        }
+
+        [HttpDelete]
+        [Route("/Delete/{id}")]
+        public IActionResult Delete(int id)
+        {
+            if (id < 0 || id >= WeatherForecasts.Count)
+            {
+                return NotFound("Forecast not found.");
+            }
+
+            WeatherForecasts.RemoveAt(id);
+            return NoContent(); // 204 No Content
         }
     }
 }
