@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Logging;
 using OpenSharpTrace.Persistence.SQL.Entities;
-using OpenSharpTrace.TraceQueue;
+using OpenSharpTrace.TransactionQueue;
 using OpenSharpTrace.Utilities;
 using System;
 using System.Linq;

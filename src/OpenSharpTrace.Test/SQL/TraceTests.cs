@@ -8,6 +8,7 @@ using OpenSharpTrace.Persistence.SQL.Entities;
 using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Threading.Tasks;
 
 namespace OpenSharpTrace.Test.SQL
 {
@@ -34,7 +35,7 @@ namespace OpenSharpTrace.Test.SQL
         }
 
         [Test]
-        public void CanAddManyTrace()
+        public async Task CanAddManyTrace()
         {
             var db = GetMemoryContext();
             var traceFirst = new Trace
@@ -63,7 +64,7 @@ namespace OpenSharpTrace.Test.SQL
             };
             var processor = new SqlTraceRepository(NullLoggerFactory.Instance, db);
 
-            Assert.DoesNotThrow(() => processor.InsertMany(new List<Trace> { traceFirst, traceSecond }));
+            Assert.DoesNotThrowAsync(() => processor.InsertManyAsync(new List<Trace> { traceFirst, traceSecond }));
         }
 
         public static TraceContext GetMemoryContext()
