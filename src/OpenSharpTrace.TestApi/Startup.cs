@@ -1,3 +1,5 @@
+// (c) 2022 Francesco Del Re <francesco.delre.87@gmail.com>
+// This code is licensed under MIT license (see LICENSE.txt for details)
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -26,6 +28,7 @@ namespace OpenSharpTrace.TestApi
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "OpenSharpTrace.TestApi", Version = "v1" });
             });
 
+            // Register the OpenSharpTrace
             services.RegisterOpenSharpTrace();
         }
 

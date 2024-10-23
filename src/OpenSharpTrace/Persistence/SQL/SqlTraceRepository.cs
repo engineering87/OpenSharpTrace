@@ -6,6 +6,7 @@ using OpenSharpTrace.Abstractions.Persistence;
 using OpenSharpTrace.Persistence.SQL.Entities;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace OpenSharpTrace.Persistence.SQL
 {
@@ -20,12 +21,12 @@ namespace OpenSharpTrace.Persistence.SQL
             _context = context ?? throw new ArgumentNullException(nameof(context));
             _logger = loggerFactory.CreateLogger(GetType().ToString());
         }
-
+        
         /// <summary>
         /// Write the current trace entities
         /// </summary>
         /// <param name="entities"></param>
-        public void InsertMany(List<Trace> entities)
+        public async Task InsertManyAsync(List<Trace> entities)
         {
             if (entities == null || entities.Count == 0)
             {
@@ -36,22 +37,28 @@ namespace OpenSharpTrace.Persistence.SQL
             {
                 var strategy = _context.Database.CreateExecutionStrategy();
 
-                strategy.Execute(() =>
+                await strategy.ExecuteAsync(async () =>
                 {
-                    using (var transaction = _context.Database.BeginTransaction())
+                    using (var transaction = await _context.Database.BeginTransactionAsync())
                     {
-                        foreach (var entity in entities)
+                        try
                         {
-                            _context.Trace.Add(entity);
+                            await _context.Trace.AddRangeAsync(entities);
+                            await _context.SaveChangesAsync();
+                            await transaction.CommitAsync();
                         }
-                        _context.SaveChanges();
-                        transaction.Commit();
-                    }                    
+                        catch (Exception ex)
+                        {
+                            _logger?.LogError(ex, "An error occurred while committing the transaction.");
+                            await transaction.RollbackAsync();
+                            throw;
+                        }
+                    }
                 });
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex.Message);
+                _logger?.LogError(ex, "An error occurred while inserting trace entities.");
             }
         }
     }

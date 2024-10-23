@@ -6,8 +6,9 @@ using Microsoft.Extensions.DependencyInjection;
 using OpenSharpTrace.Abstractions.Persistence;
 using OpenSharpTrace.Persistence.SQL;
 using OpenSharpTrace.Persistence.SQL.Entities;
-using OpenSharpTrace.TraceQueue;
+using OpenSharpTrace.TransactionQueue;
 using OpenSharpTrace.TransactionScheduler;
+using System;
 using System.IO;
 
 namespace OpenSharpTrace.Middleware
@@ -22,19 +23,25 @@ namespace OpenSharpTrace.Middleware
         {
             var configuration = new ConfigurationBuilder()
                .SetBasePath(Directory.GetCurrentDirectory())
-               .AddJsonFile("appsettings.json", true, true)
+               .AddJsonFile("appsettings.json", false, true)
                .AddEnvironmentVariables()
                .Build();
 
-            collection.AddScoped<ISqlTraceRepository, SqlTraceRepository>();
+            var connectionString = configuration.GetConnectionString("TraceDb");
+            if (string.IsNullOrEmpty(connectionString))
+            {
+                throw new InvalidOperationException("The connection string 'TraceDb' is not configured.");
+            }
+
             collection.AddDbContext<TraceContext>(options =>
             {
-                options.UseSqlServer(configuration.GetConnectionString("TraceDb"),
+                options.UseSqlServer(connectionString,
                  sqlServerOptionsAction: sqlOptions =>
                  {
                      sqlOptions.EnableRetryOnFailure();
                  });
             });
+            collection.AddScoped<ISqlTraceRepository, SqlTraceRepository>();
             collection.AddSingleton<ITraceQueue<Trace>, TraceQueue<Trace>>();
             collection.AddSingleton<ServiceTransaction>();
             collection.AddHostedService<ScheduledServiceTransaction>();
@@ -49,19 +56,25 @@ namespace OpenSharpTrace.Middleware
         {
             var configuration = new ConfigurationBuilder()
                .SetBasePath(Directory.GetCurrentDirectory())
-               .AddJsonFile("appsettings.json", true, true)
+               .AddJsonFile("appsettings.json", false, true)
                .AddEnvironmentVariables()
                .Build();
 
-            collection.AddScoped<ISqlTraceRepository, SqlTraceRepository>();
+            var connectionString = configuration.GetConnectionString(connectionKey);
+            if (string.IsNullOrEmpty(connectionString))
+            {
+                throw new InvalidOperationException($"The connection string '{connectionKey}' is not configured.");
+            }
+
             collection.AddDbContext<TraceContext>(options =>
             {
-                options.UseSqlServer(configuration.GetConnectionString(connectionKey),
+                options.UseSqlServer(connectionString,
                  sqlServerOptionsAction: sqlOptions =>
                  {
                      sqlOptions.EnableRetryOnFailure();
                  });
             });
+            collection.AddScoped<ISqlTraceRepository, SqlTraceRepository>();
             collection.AddSingleton<ITraceQueue<Trace>, TraceQueue<Trace>>();
             collection.AddSingleton<ServiceTransaction>();
             collection.AddHostedService<ScheduledServiceTransaction>();
@@ -77,19 +90,25 @@ namespace OpenSharpTrace.Middleware
         {
             var configuration = new ConfigurationBuilder()
                .SetBasePath(Directory.GetCurrentDirectory())
-               .AddJsonFile(jsonFileName, true, true)
+               .AddJsonFile(jsonFileName, false, true)
                .AddEnvironmentVariables()
                .Build();
 
-            collection.AddScoped<ISqlTraceRepository, SqlTraceRepository>();
+            var connectionString = configuration.GetConnectionString(connectionKey);
+            if (string.IsNullOrEmpty(connectionString))
+            {
+                throw new InvalidOperationException($"The connection string '{connectionKey}' is not configured.");
+            }
+
             collection.AddDbContext<TraceContext>(options =>
             {
-                options.UseSqlServer(configuration.GetConnectionString(connectionKey),
+                options.UseSqlServer(connectionString,
                  sqlServerOptionsAction: sqlOptions =>
                  {
                      sqlOptions.EnableRetryOnFailure();
                  });
             });
+            collection.AddScoped<ISqlTraceRepository, SqlTraceRepository>();
             collection.AddSingleton<ITraceQueue<Trace>, TraceQueue<Trace>>();
             collection.AddSingleton<ServiceTransaction>();
             collection.AddHostedService<ScheduledServiceTransaction>();

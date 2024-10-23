@@ -30,7 +30,7 @@ namespace OpenSharpTrace.TransactionScheduler
         {
             using var scope = _services.CreateScope();
             var serviceTransaction = scope.ServiceProvider.GetRequiredService<ServiceTransaction>();
-            await serviceTransaction.WriteTraceFromQueue();
+            await serviceTransaction.WriteTraceFromQueueAsync();
         }
 
         public Task StopAsync(CancellationToken cancellationToken)
