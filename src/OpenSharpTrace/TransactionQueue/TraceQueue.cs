@@ -2,7 +2,7 @@
 // This code is licensed under MIT license (see LICENSE.txt for details)
 using System.Collections.Concurrent;
 
-namespace OpenSharpTrace.TraceQueue
+namespace OpenSharpTrace.TransactionQueue
 {
     /// <summary>
     /// Global queue for track persistence.

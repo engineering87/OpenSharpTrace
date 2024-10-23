@@ -99,7 +99,7 @@ The following is the table creation script:
 ```tsql
 CREATE TABLE [dbo].[Trace](
 	[Id] [bigint] IDENTITY(1,1) NOT NULL,
-	[TransactionId] [nvarchar](36) NULL,
+	[TransactionId] [nvarchar](MAX) NULL,
 	[ServerId] [nvarchar](MAX) NULL,
 	[ClientId] [nvarchar](MAX) NULL,
 	[HttpMethod] [nvarchar](7) NULL,
@@ -114,6 +114,7 @@ CREATE TABLE [dbo].[Trace](
 	[ExecutionTime] [numeric] NULL,
 ) ON [PRIMARY]
 ```
+From version 4.1.0 onwards, table creation is handled automatically, in case it is missing on the SQL instance.
 
 Remember to populate the **TraceDb** key within the SQL connection strings config file:
 

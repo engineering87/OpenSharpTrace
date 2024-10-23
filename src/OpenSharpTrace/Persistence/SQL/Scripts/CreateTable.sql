@@ -1,6 +1,6 @@
 CREATE TABLE [dbo].[Trace](
 	[Id] [bigint] IDENTITY(1,1) NOT NULL,
-	[TransactionId] [nvarchar](36) NULL,
+	[TransactionId] [nvarchar](MAX) NULL,
 	[ServerId] [nvarchar](MAX) NULL,
 	[ClientId] [nvarchar](MAX) NULL,
 	[HttpMethod] [nvarchar](7) NULL,

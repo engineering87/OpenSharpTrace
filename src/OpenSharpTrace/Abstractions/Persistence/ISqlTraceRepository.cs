@@ -2,11 +2,12 @@
 // This code is licensed under MIT license (see LICENSE.txt for details)
 using OpenSharpTrace.Persistence.SQL.Entities;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace OpenSharpTrace.Abstractions.Persistence
 {
     public interface ISqlTraceRepository
     {
-        void InsertMany(List<Trace> entity);
+        Task InsertManyAsync(List<Trace> entity);
     }
 }

@@ -1,8 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿// (c) 2022 Francesco Del Re <francesco.delre.87@gmail.com>
+// This code is licensed under MIT license (see LICENSE.txt for details)
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using OpenSharpTrace.Controllers;
 using OpenSharpTrace.Persistence.SQL.Entities;
-using OpenSharpTrace.TraceQueue;
+using OpenSharpTrace.TransactionQueue;
 using System;
 using System.Collections.Generic;
 using System.Linq;

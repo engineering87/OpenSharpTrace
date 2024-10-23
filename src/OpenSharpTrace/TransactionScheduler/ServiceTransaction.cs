@@ -3,7 +3,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using OpenSharpTrace.Abstractions.Persistence;
 using OpenSharpTrace.Persistence.SQL.Entities;
-using OpenSharpTrace.TraceQueue;
+using OpenSharpTrace.TransactionQueue;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -26,9 +26,9 @@ namespace OpenSharpTrace.TransactionScheduler
         /// Persists all tracks collected since the last run
         /// </summary>
         /// <returns></returns>
-        public Task WriteTraceFromQueue()
+        public async Task WriteTraceFromQueueAsync()
         {
-            if(_transactionQueue.Count() == 0) return Task.CompletedTask;
+            if(_transactionQueue.Count() == 0) return;
 
             using (var scope = _scopeFactory.CreateScope())
             {
@@ -40,10 +40,10 @@ namespace OpenSharpTrace.TransactionScheduler
                 }
 
                 var sqlTraceRepository = scope.ServiceProvider.GetRequiredService<ISqlTraceRepository>();
-                sqlTraceRepository.InsertMany(currentTraceList);
+                await sqlTraceRepository.InsertManyAsync(currentTraceList);
             }
 
-            return Task.CompletedTask;
+            return;
         }
     }
 }
