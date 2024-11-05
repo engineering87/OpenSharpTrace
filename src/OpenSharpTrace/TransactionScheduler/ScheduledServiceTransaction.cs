@@ -1,5 +1,6 @@
 ﻿// (c) 2022 Francesco Del Re <francesco.delre.87@gmail.com>
 // This code is licensed under MIT license (see LICENSE.txt for details)
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System;
@@ -11,18 +12,22 @@ namespace OpenSharpTrace.TransactionScheduler
     public class ScheduledServiceTransaction : IHostedService
     {
         private readonly IServiceProvider _services;
+        private readonly TimeSpan _timerInterval;
 
         private Timer _timer;
 
         public ScheduledServiceTransaction(
-            IServiceProvider services)
+            IServiceProvider services,
+            IConfiguration configuration)
         {
             _services = services;
+            var intervalInSeconds = configuration.GetValue<int?>("ScheduledSharpTrace:TimerIntervalSeconds") ?? 60;
+            _timerInterval = TimeSpan.FromSeconds(intervalInSeconds);
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            _timer = new Timer(DoWork, null, TimeSpan.Zero, TimeSpan.FromMinutes(1));
+            _timer = new Timer(DoWork, null, TimeSpan.Zero, _timerInterval);
             return Task.CompletedTask;
         }
 
