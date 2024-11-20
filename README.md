@@ -7,7 +7,25 @@
 [![Build](https://github.com/engineering87/OpenSharpTrace/actions/workflows/dotnet.yml/badge.svg)](https://github.com/engineering87/OpenSharpTrace/actions/workflows/dotnet.yml)
 [![stars - opensharptrace](https://img.shields.io/github/stars/engineering87/OpenSharpTrace?style=social)](https://github.com/engineering87/OpenSharpTrace)
 
-OpenSharpTrace is a C# .NET library that allows extending any WebApi controller to automate a custom trace and observability of REST APIs in microservices environment. 
+OpenSharpTrace is a C# .NET library that allows extending any WebApi controller to automate a custom trace and observability of REST APIs in microservices environment.
+
+## Features
+OpenSharpTrace offers the following features to enhance tracing and logging capabilities in .NET applications:
+
+- **Distributed Tracing**: Seamlessly integrate distributed tracing into your application to monitor and analyze requests across services.
+- **Customizable Sampling**: Support for configurable sampling strategies to manage trace data volume effectively.
+- **Extensible Framework**: Easily extend and adapt the library to fit your specific tracing needs.
+- **Performance Optimization**: Minimal performance overhead to ensure smooth application operation.
+- **Multi-environment Support**: Effortless configuration and deployment across various environments, including development, staging, and production.
+
+These features make OpenSharpTrace a powerful and flexible choice for implementing robust tracing solutions in your .NET ecosystem.
+
+## Installation
+You can install the library via the NuGet package manager with the following command:
+
+```bash
+dotnet add package OpenSharpTrace
+```
 
 ### How it works
 OpenSharpTrace implements a custom controller that overrides the `OnActionExecuting` and `OnActionExecuted` events to capture the request and response data. These are then encapsulated in a Trace object, which can be persisted specifically to SQL. All the relevant information needed for tracing both the request and response is automatically persisted, in details:
