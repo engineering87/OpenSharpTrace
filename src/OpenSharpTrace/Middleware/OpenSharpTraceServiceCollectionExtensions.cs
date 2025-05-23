@@ -38,7 +38,11 @@ namespace OpenSharpTrace.Middleware
                 options.UseSqlServer(connectionString,
                  sqlServerOptionsAction: sqlOptions =>
                  {
-                     sqlOptions.EnableRetryOnFailure();
+                     sqlOptions.EnableRetryOnFailure(
+                        maxRetryCount: 5,
+                        maxRetryDelay: TimeSpan.FromSeconds(10),
+                        errorNumbersToAdd: [-2, 1205, 4060, 10928, 10929, 40197, 40501, 40613]
+                    );
                  });
             });
             collection.AddScoped<ISqlTraceRepository, SqlTraceRepository>();
@@ -71,7 +75,11 @@ namespace OpenSharpTrace.Middleware
                 options.UseSqlServer(connectionString,
                  sqlServerOptionsAction: sqlOptions =>
                  {
-                     sqlOptions.EnableRetryOnFailure();
+                     sqlOptions.EnableRetryOnFailure(
+                        maxRetryCount: 5,
+                        maxRetryDelay: TimeSpan.FromSeconds(10),
+                        errorNumbersToAdd: [-2, 1205, 4060, 10928, 10929, 40197, 40501, 40613]
+                    );
                  });
             });
             collection.AddScoped<ISqlTraceRepository, SqlTraceRepository>();
@@ -105,7 +113,11 @@ namespace OpenSharpTrace.Middleware
                 options.UseSqlServer(connectionString,
                  sqlServerOptionsAction: sqlOptions =>
                  {
-                     sqlOptions.EnableRetryOnFailure();
+                     sqlOptions.EnableRetryOnFailure(
+                        maxRetryCount: 5,
+                        maxRetryDelay: TimeSpan.FromSeconds(10),
+                        errorNumbersToAdd: [-2, 1205, 4060, 10928, 10929, 40197, 40501, 40613]
+                    );
                  });
             });
             collection.AddScoped<ISqlTraceRepository, SqlTraceRepository>();
