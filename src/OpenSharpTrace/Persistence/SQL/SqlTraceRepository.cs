@@ -6,6 +6,7 @@ using OpenSharpTrace.Abstractions.Persistence;
 using OpenSharpTrace.Persistence.SQL.Entities;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace OpenSharpTrace.Persistence.SQL
@@ -26,12 +27,10 @@ namespace OpenSharpTrace.Persistence.SQL
         /// Write the current trace entities
         /// </summary>
         /// <param name="entities"></param>
-        public async Task InsertManyAsync(List<Trace> entities)
+        public async Task InsertManyAsync(IEnumerable<Trace> entities)
         {
-            if (entities == null || entities.Count == 0)
-            {
-                return;
-            }
+            var list = entities as ICollection<Trace> ?? entities?.ToList();
+            if (list is null || list.Count == 0) return;
 
             try
             {

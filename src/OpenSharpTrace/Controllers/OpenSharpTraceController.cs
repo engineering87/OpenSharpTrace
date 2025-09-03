@@ -1,5 +1,6 @@
 ﻿// (c) 2022 Francesco Del Re <francesco.delre.87@gmail.com>
 // This code is licensed under MIT license (see LICENSE.txt for details)
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Logging;
@@ -7,7 +8,6 @@ using OpenSharpTrace.Persistence.SQL.Entities;
 using OpenSharpTrace.TransactionQueue;
 using OpenSharpTrace.Utilities;
 using System;
-using System.Linq;
 using System.Net;
 
 namespace OpenSharpTrace.Controllers
@@ -21,8 +21,8 @@ namespace OpenSharpTrace.Controllers
 
         private readonly ILogger _logger;
 
-        private const string RouteDataKey = "REQUEST";
-        private const string TimeExecutionKey = "EXEC";
+        private const string ItemsRequestKey = "OST_REQUEST";
+        private const string ItemsStartKey = "OST_EXEC_START";
         private const string TransactionKey = "TRANSACTION";
         private const string ConsumerKey = "CONSUMER";
 
@@ -48,9 +48,9 @@ namespace OpenSharpTrace.Controllers
         /// <param name="context">Context for action filters</param>
         public override void OnActionExecuting(ActionExecutingContext context)
         {
-            // add the request objects to RouteData
-            context?.RouteData.Values.Add(RouteDataKey, context.ActionArguments);
-            context?.RouteData.Values.Add(TimeExecutionKey, DateTime.UtcNow);
+            if (context == null) return;
+            context.HttpContext.Items[ItemsRequestKey] = context.ActionArguments;
+            context.HttpContext.Items[ItemsStartKey] = DateTime.UtcNow;
 
             base.OnActionExecuting(context);
         }
@@ -61,48 +61,45 @@ namespace OpenSharpTrace.Controllers
         /// <param name="context">Context for action filters</param>
         public override void OnActionExecuted(ActionExecutedContext context)
         {
-            var objectResult = context?.Result as ObjectResult;
+            var httpContext = context?.HttpContext;
+            if (httpContext == null)
+            {
+                base.OnActionExecuted(context);
+                return;
+            }
 
-            // get the header informations
-            var transaction = context.HttpContext?.Request.Headers[TransactionKey].FirstOrDefault();
-            var client = context.HttpContext?.Request.Headers[ConsumerKey].FirstOrDefault();
+            httpContext.Request.Headers.TryGetValue(TransactionKey, out var transaction);
+            httpContext.Request.Headers.TryGetValue(ConsumerKey, out var client);
 
-            // get the request objects from RouteData
-            var request = context.RouteData.Values[RouteDataKey];
-            var timeStamp = context.RouteData.Values[TimeExecutionKey];
+            var request = httpContext.Items[ItemsRequestKey];
+            var startedAt = httpContext.Items[ItemsStartKey] as DateTime?;
+            double? totalMs = startedAt.HasValue
+                ? (DateTime.UtcNow - startedAt.Value).TotalMilliseconds
+                : null;
 
-            // read other usefull informations
-            var totalExecutionTime = (DateTime.UtcNow - timeStamp.ToDateTime())?.TotalMilliseconds;
-            var httpMethod = context.HttpContext?.Request.Method;
-            var httpPath = context.HttpContext?.Request.Path;
-            var actionDescriptor = context.ActionDescriptor?.DisplayName;
-            var remoteAddress = context.HttpContext?.Connection.RemoteIpAddress?.ToString();
-            var host = context.HttpContext?.Request.Host.ToString();
-            var exception = context.Exception?.Message;
-            var httpStatusCode = objectResult?.StatusCode ?? (int)HttpStatusCode.OK;
-
-            if (exception != null)
-                httpStatusCode = (int)HttpStatusCode.InternalServerError;
-
-            // get the object response
-            var response = objectResult?.Value;
+            var result = context?.Result;
+            int httpStatusCode =
+                context?.Exception != null ? (int)HttpStatusCode.InternalServerError :
+                (result as ObjectResult)?.StatusCode
+                ?? (result as StatusCodeResult)?.StatusCode
+                ?? (int)HttpStatusCode.OK;
 
             // write the current trace
-            var trace = new Trace()
+            var trace = new Trace
             {
-                TransactionId = transaction,
-                ClientId = client,
-                ServerId = host,
-                HttpMethod = httpMethod,
-                HttpPath = httpPath,
+                TransactionId = transaction.ToString(),
+                ClientId = client.ToString(),
+                ServerId = httpContext.Request.Host.ToString(),
+                HttpMethod = httpContext.Request.Method,
+                HttpPath = httpContext.Request.Path,
                 HttpStatusCode = httpStatusCode,
-                ActionDescriptor = actionDescriptor,
-                RemoteAddress = remoteAddress,
+                ActionDescriptor = context?.ActionDescriptor?.DisplayName,
+                RemoteAddress = httpContext.Connection.RemoteIpAddress?.ToString(),
                 JsonRequest = request.ToJson(),
-                JsonResponse = response.ToJson(),
+                JsonResponse = (result as ObjectResult)?.Value.ToJson(),
                 TimeStamp = DateTime.UtcNow,
-                Exception = exception,
-                ExecutionTime = totalExecutionTime
+                Exception = context?.Exception?.Message,
+                ExecutionTime = totalMs
             };
 
             _transactionQueue.Enqueue(trace);

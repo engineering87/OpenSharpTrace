@@ -9,39 +9,51 @@ using System.Threading.Tasks;
 
 namespace OpenSharpTrace.TransactionScheduler
 {
-    public class ScheduledServiceTransaction : IHostedService
+    public class ScheduledServiceTransaction : IHostedService, IDisposable
     {
         private readonly IServiceProvider _services;
-        private readonly TimeSpan _timerInterval;
-
+        private readonly TimeSpan _interval;
+        private readonly SemaphoreSlim _mutex = new(1, 1);
         private Timer _timer;
 
-        public ScheduledServiceTransaction(
-            IServiceProvider services,
-            IConfiguration configuration)
+        public ScheduledServiceTransaction(IServiceProvider services, IConfiguration cfg)
         {
             _services = services;
-            var intervalInSeconds = configuration.GetValue<int?>("ScheduledSharpTrace:TimerIntervalSeconds") ?? 60;
-            _timerInterval = TimeSpan.FromSeconds(intervalInSeconds);
+            var seconds = cfg.GetValue<int?>("ScheduledSharpTrace:TimerIntervalSeconds") ?? 60;
+            _interval = TimeSpan.FromSeconds(seconds);
         }
 
-        public Task StartAsync(CancellationToken cancellationToken)
+        public Task StartAsync(CancellationToken ct)
         {
-            _timer = new Timer(DoWork, null, TimeSpan.Zero, _timerInterval);
+            _timer = new Timer(async _ => await Tick(), null, TimeSpan.Zero, _interval);
             return Task.CompletedTask;
         }
 
-        private async void DoWork(object state)
+        private async Task Tick()
         {
-            using var scope = _services.CreateScope();
-            var serviceTransaction = scope.ServiceProvider.GetRequiredService<ServiceTransaction>();
-            await serviceTransaction.WriteTraceFromQueueAsync();
+            if (!await _mutex.WaitAsync(0)) return;
+            try
+            {
+                using var scope = _services.CreateScope();
+                var tx = scope.ServiceProvider.GetRequiredService<ServiceTransaction>();
+                await tx.WriteTraceFromQueueAsync();
+            }
+            catch (Exception)
+            {
+                // ignore
+            }
+            finally
+            {
+                _mutex.Release();
+            }
         }
 
-        public Task StopAsync(CancellationToken cancellationToken)
+        public Task StopAsync(CancellationToken ct)
         {
             _timer?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
+
+        public void Dispose() => _timer?.Dispose();
     }
 }

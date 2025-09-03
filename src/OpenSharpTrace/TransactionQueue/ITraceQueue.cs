@@ -5,7 +5,7 @@ namespace OpenSharpTrace.TransactionQueue
     public interface ITraceQueue<T>
     {
         void Enqueue(T item);
-        T Dequeue();
+        bool TryDequeue(out T item);
         int Count();
     }
 }

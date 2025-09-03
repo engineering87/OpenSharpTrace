@@ -10,22 +10,12 @@ namespace OpenSharpTrace.TransactionQueue
     /// <typeparam name="T"></typeparam>
     public class TraceQueue<T> : ITraceQueue<T>
     {
-        private readonly ConcurrentQueue<T> _queue = new ConcurrentQueue<T>();
+        private readonly ConcurrentQueue<T> _queue = new();
 
-        public void Enqueue(T item)
-        {
-            _queue.Enqueue(item);
-        }
+        public void Enqueue(T item) => _queue.Enqueue(item);
 
-        public T Dequeue()
-        {
-            _queue.TryDequeue(out T item);
-            return item;
-        }
+        public bool TryDequeue(out T item) => _queue.TryDequeue(out item);
 
-        public int Count()
-        {
-            return _queue.Count;
-        }
+        public int Count() => _queue.Count;
     }
 }

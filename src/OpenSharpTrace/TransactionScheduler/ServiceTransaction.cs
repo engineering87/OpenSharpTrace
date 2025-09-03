@@ -34,10 +34,8 @@ namespace OpenSharpTrace.TransactionScheduler
             {
                 var currentTraceList = new List<Trace>();
 
-                while (_transactionQueue.Count() > 0)
-                {
-                    currentTraceList.Add(_transactionQueue.Dequeue());
-                }
+                while (_transactionQueue.TryDequeue(out var t))
+                    currentTraceList.Add(t);
 
                 var sqlTraceRepository = scope.ServiceProvider.GetRequiredService<ISqlTraceRepository>();
                 await sqlTraceRepository.InsertManyAsync(currentTraceList);

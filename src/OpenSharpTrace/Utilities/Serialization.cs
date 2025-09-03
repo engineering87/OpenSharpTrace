@@ -14,8 +14,8 @@ namespace OpenSharpTrace.Utilities
         /// <returns></returns>
         public static string ToJson(this object value)
         {
-            if (value == null) return empyJson;
-            if (value.ToString() == string.Empty) return empyJson;
+            if (value == null) return emptyJson;
+            if (value.ToString() == string.Empty) return emptyJson;
 
             try
             {
@@ -26,16 +26,14 @@ namespace OpenSharpTrace.Utilities
 
                 var result = JsonSerializer.Serialize(value, option);
 
-                if (string.IsNullOrEmpty(result))
-                    return empyJson;
-                return result;
+                return string.IsNullOrWhiteSpace(result) ? emptyJson : result;
             } 
             catch
             {
-                return empyJson;
+                return emptyJson;
             }
         }
 
-        private const string empyJson = "{}";
+        private const string emptyJson = "{}";
     }
 }

@@ -8,6 +8,6 @@ namespace OpenSharpTrace.Abstractions.Persistence
 {
     public interface ISqlTraceRepository
     {
-        Task InsertManyAsync(List<Trace> entity);
+        Task InsertManyAsync(IEnumerable<Trace> entity);
     }
 }
