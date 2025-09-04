@@ -32,33 +32,24 @@ namespace OpenSharpTrace.Persistence.SQL
             var list = entities as ICollection<Trace> ?? entities?.ToList();
             if (list is null || list.Count == 0) return;
 
-            try
-            {
-                var strategy = _context.Database.CreateExecutionStrategy();
+            var strategy = _context.Database.CreateExecutionStrategy();
 
-                await strategy.ExecuteAsync(async () =>
-                {
-                    using (var transaction = await _context.Database.BeginTransactionAsync())
-                    {
-                        try
-                        {
-                            await _context.Trace.AddRangeAsync(entities);
-                            await _context.SaveChangesAsync();
-                            await transaction.CommitAsync();
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger?.LogError(ex, "An error occurred while committing the transaction.");
-                            await transaction.RollbackAsync();
-                            throw;
-                        }
-                    }
-                });
-            }
-            catch (Exception ex)
+            await strategy.ExecuteAsync(async () =>
             {
-                _logger?.LogError(ex, "An error occurred while inserting trace entities.");
-            }
+                await using var transaction = await _context.Database.BeginTransactionAsync();
+                try
+                {
+                    await _context.Trace.AddRangeAsync(list);
+                    await _context.SaveChangesAsync();
+                    await transaction.CommitAsync();
+                }
+                catch (Exception ex)
+                {
+                    _logger?.LogError(ex, "Failed to insert {Count} trace entities.", list.Count);
+                    await transaction.RollbackAsync();
+                    throw;
+                }
+            });
         }
     }
 }

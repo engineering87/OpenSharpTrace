@@ -1,6 +1,5 @@
 ﻿// (c) 2022 Francesco Del Re <francesco.delre.87@gmail.com>
 // This code is licensed under MIT license (see LICENSE.txt for details)
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Logging;
@@ -13,7 +12,7 @@ using System.Net;
 namespace OpenSharpTrace.Controllers
 {
     /// <summary>
-    /// OpenSharpTrace base controller. Traces will be persist every minute in a single transaction.
+    /// OpenSharpTrace base controller. Traces will be persisted every minute in a single transaction.
     /// </summary>
     public class OpenSharpTraceController : Controller
     {
@@ -72,7 +71,14 @@ namespace OpenSharpTrace.Controllers
             httpContext.Request.Headers.TryGetValue(ConsumerKey, out var client);
 
             var request = httpContext.Items[ItemsRequestKey];
-            var startedAt = httpContext.Items[ItemsStartKey] as DateTime?;
+
+            DateTime? startedAt = null;
+            if (httpContext.Items.TryGetValue(ItemsStartKey, out var startedObj) &&
+                startedObj is DateTime started)
+            {
+                startedAt = started;
+            }
+
             double? totalMs = startedAt.HasValue
                 ? (DateTime.UtcNow - startedAt.Value).TotalMilliseconds
                 : null;
@@ -82,7 +88,16 @@ namespace OpenSharpTrace.Controllers
                 context?.Exception != null ? (int)HttpStatusCode.InternalServerError :
                 (result as ObjectResult)?.StatusCode
                 ?? (result as StatusCodeResult)?.StatusCode
-                ?? (int)HttpStatusCode.OK;
+                ?? (httpContext.Response?.StatusCode ?? (int)HttpStatusCode.OK);
+
+            var remote = httpContext.Request.Headers.TryGetValue("X-Forwarded-For", out var xff) && !string.IsNullOrWhiteSpace(xff)
+                ? xff.ToString().Split(',')[0].Trim()
+                : httpContext.Connection.RemoteIpAddress?.ToString();
+
+            var path = httpContext.Request.Path.ToString();
+            var query = httpContext.Request.QueryString.HasValue
+                ? httpContext.Request.QueryString.Value
+                : string.Empty;
 
             // write the current trace
             var trace = new Trace
@@ -91,10 +106,10 @@ namespace OpenSharpTrace.Controllers
                 ClientId = client.ToString(),
                 ServerId = httpContext.Request.Host.ToString(),
                 HttpMethod = httpContext.Request.Method,
-                HttpPath = httpContext.Request.Path,
+                HttpPath = $"{path}{query}",
                 HttpStatusCode = httpStatusCode,
                 ActionDescriptor = context?.ActionDescriptor?.DisplayName,
-                RemoteAddress = httpContext.Connection.RemoteIpAddress?.ToString(),
+                RemoteAddress = Network.CleanNotationAddress(remote),
                 JsonRequest = request.ToJson(),
                 JsonResponse = (result as ObjectResult)?.Value.ToJson(),
                 TimeStamp = DateTime.UtcNow,

@@ -13,7 +13,7 @@ CREATE TABLE [dbo].[Trace](
 	[JsonResponse] [nvarchar](MAX) NULL,
 	[TimeStamp] [datetime2](7) NULL,
 	[Exception] [nvarchar](MAX) NULL,
-	[ExecutionTime] [decimal](18,3) NULL,
+	[ExecutionTime] [float] NULL,
 	CONSTRAINT [PK_Trace] PRIMARY KEY CLUSTERED ([Id] ASC)
 ) ON [PRIMARY];
 

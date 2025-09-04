@@ -7,48 +7,52 @@
 [![Build](https://github.com/engineering87/OpenSharpTrace/actions/workflows/dotnet.yml/badge.svg)](https://github.com/engineering87/OpenSharpTrace/actions/workflows/dotnet.yml)
 [![stars - opensharptrace](https://img.shields.io/github/stars/engineering87/OpenSharpTrace?style=social)](https://github.com/engineering87/OpenSharpTrace)
 
-OpenSharpTrace is a C# .NET library that allows extending any WebApi controller to automate a custom trace and observability of REST APIs in microservices environment.
+**OpenSharpTrace** is a .NET/C# library that augments Web API controllers to automatically trace requests/responses and key metadata for observability in microservices.
+
+✅ **Persistence supported:** **Microsoft SQL Server** via **Entity Framework Core**  
 
 ## Features
 OpenSharpTrace offers the following features to enhance tracing and logging capabilities in .NET applications:
 
-- **Distributed Tracing**: Seamlessly integrate distributed tracing into your application to monitor and analyze requests across services.
-- **Customizable Sampling**: Support for configurable sampling strategies to manage trace data volume effectively.
-- **Extensible Framework**: Easily extend and adapt the library to fit your specific tracing needs.
-- **Performance Optimization**: Minimal performance overhead to ensure smooth application operation.
-- **Multi-environment Support**: Effortless configuration and deployment across various environments, including development, staging, and production.
+- **Controller-level tracing** – hooks into `OnActionExecuting` / `OnActionExecuted`.
+- **Batch persistence** – traces are queued in memory and **flushed periodically** in a single DB transaction (default: every 60s).
+- **SQL Server ready** – EF Core `ExecutionStrategy` and `EnableRetryOnFailure`.
+- **Rich trace data** – status code, path (+ query string), client/server IDs, remote IP (with `X-Forwarded-For`), timings, exceptions, JSON payloads.
+- **Simple DI registration** – one extension method to wire everything up.
 
 These features make OpenSharpTrace a powerful and flexible choice for implementing robust tracing solutions in your .NET ecosystem.
 
 ## Installation
-You can install the library via the NuGet package manager with the following command:
 
 ```bash
 dotnet add package OpenSharpTrace
 ```
 
-### How it works
-OpenSharpTrace implements a custom controller that overrides the `OnActionExecuting` and `OnActionExecuted` events to capture the request and response data. These are then encapsulated in a Trace object, which can be persisted specifically to SQL. All the relevant information needed for tracing both the request and response is automatically persisted, in details:
+## How it works
+OpenSharpTrace provides a base controller that hooks into the ASP.NET Core action pipeline by overriding `OnActionExecuting` and `OnActionExecute`.
+At the start of each request it snapshots the input and start time; at the end it computes the elapsed time, gathers HTTP/context metadata, serializes request/response payloads, and packages everything into a `Trace`.
+Traces are enqueued in memory and periodically flushed to SQL Server in a single transaction (default interval: 60s) with EF Core’s execution strategy and transient-retry.
 
-* **TransactionId**: identifier associated with the request (retrieved from the header).
-* **ServerId**: name of the server.
-* **ClientId**: name of the client (retrieved from the header).
-* **HttpMethod**: HTTP method on the controller.
-* **HttpPath**: HTTP endpoint on the controller.
-* **HttpStatusCode**: HTTP result status code.
-* **ActionDescriptor**: full action descriptor detail.
-* **RemoteAddress**: IP address of the consumer.
-* **JsonRequest**: JSON serialization of the request.
-* **JsonResponse**: JSON serialization of the response.
-* **TimeStamp**: UTC timestamp.
-* **Exception**: possible exception message.
-* **ExecutionTime**: total action execution time in milliseconds.
+The following fields are captured and persisted:
 
-**TransactionId** and **ConsumerId** retrieved from the header should be enhanced by the client to allow a possible correlations between calls.
-In order to enhance the two parameters, client will have to add the followuing header keys:
+- **TransactionId** – correlation identifier for the request (read from the `TRANSACTION` header if present).
+- **ServerId** – server/host handling the request.
+- **ClientId** – caller identity (read from the `CONSUMER` header if present).
+- **HttpMethod** – HTTP method.
+- **HttpPath** – request path including the query string.
+- **HttpStatusCode** – response status code.
+- **ActionDescriptor** – fully qualified action identifier.
+- **RemoteAddress** – client IP (prefers `X-Forwarded-For`, falls back to `RemoteIpAddress`; IPv6-mapped addresses are normalized).
+- **JsonRequest** – JSON serialization of the request arguments.
+- **JsonResponse** – JSON serialization of the action result (when available).
+- **TimeStamp** – UTC timestamp at trace creation.
+- **Exception** – exception message, if any occurred during execution.
+- **ExecutionTime** – total action execution time in milliseconds.
 
-* `TRANSACTION` for TransactionId
-* `CONSUMER` for ClientId
+To enable end-to-end correlation across services, clients should set the following headers on outbound requests:
+
+- `TRANSACTION` → mapped to TransactionId
+- `CONSUMER` → mapped to ClientId
 
 for example:
 
@@ -59,87 +63,110 @@ request.Headers.Add("TRANSACTION", "123456789");
 request.Headers.Add("CONSUMER", "client-name");
 ```
 
-### How to use it
-
-To use the OpenSharpTrace library, each WebApi controller must extend the **OpenSharpTraceController** controller:
+## How to use it
+1) **Inherit from the base controller**
 
 ```csharp
-using OpenSharpTrace.Abstractions.Persistence;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using OpenSharpTrace.Controllers;
+using OpenSharpTrace.TransactionQueue;
+using OpenSharpTrace.Persistence.SQL.Entities;
 
 [ApiController]
 [Route("api/[controller]")]
 public class WeatherForecastController : OpenSharpTraceController
-```
-
-each controller must implement the following constructor, for example:
-
-```csharp
-public WeatherForecastController(
-	ILogger<WeatherForecastController> logger,
-	ITraceQueue<Trace> transactionQueue) : base(logger, transactionQueue)
 {
-	_logger = logger;
+    private readonly ILogger<WeatherForecastController> _logger;
+
+    public WeatherForecastController(
+        ILogger<WeatherForecastController> logger,
+        ITraceQueue<Trace> transactionQueue)
+        : base(logger, transactionQueue)
+    {
+        _logger = logger;
+    }
+
+    // your actions...
 }
 ```
 
-for older version of the library (2.0.0 or above):
-
-```csharp
-public WeatherForecastController(
-	ILoggerFactory loggerFactory, 
-	ISqlTraceRepository repository) 
-: base(loggerFactory, repository)
-{
-    _logger = loggerFactory.CreateLogger(GetType().ToString());
-}
-```
-
-You also need to register the OpenSharpTrace middleware.
-To do this, add the following configurations under WebApplicationBuilder:
+2) **Register services (Dependency Injection)**
+Option A – default connection key TraceDb from appsettings.json:
 
 ```csharp
 using OpenSharpTrace.Middleware;
 
-services.RegisterOpenSharpTrace();
-// ...
+builder.Services.RegisterOpenSharpTrace();
 ```
 
-In the source code you can find a simple test Web Api.
+Option B – specify a connection key:
 
-### Available connectors
+```csharp
+builder.Services.RegisterOpenSharpTrace("MyTraceDb");
+```
+
+Option C – pass IConfiguration (recommended for hosted apps):
+
+```csharp
+builder.Services.RegisterOpenSharpTrace(builder.Configuration);                // uses "TraceDb"
+builder.Services.RegisterOpenSharpTrace(builder.Configuration, "MyTraceDb");   // custom key
+```
+
+## Available connectors
 
 #### SQL
-
 Currently the only connector available is the SQL connector on the *Trace* table using *Entity Framework Core*.
 The following is the table creation script:
 
 ```tsql
 CREATE TABLE [dbo].[Trace](
-	[Id] [bigint] IDENTITY(1,1) NOT NULL,
-	[TransactionId] [nvarchar](MAX) NULL,
-	[ServerId] [nvarchar](MAX) NULL,
-	[ClientId] [nvarchar](MAX) NULL,
-	[HttpMethod] [nvarchar](7) NULL,
-	[HttpPath] [nvarchar](MAX) NULL,
-	[HttpStatusCode] [int] NULL,
-	[ActionDescriptor] [nvarchar](MAX) NULL,
-	[RemoteAddress] [nvarchar](MAX) NULL,
-	[JsonRequest] [nvarchar](MAX) NULL,
-	[JsonResponse] [nvarchar](MAX) NULL,
-	[TimeStamp] [datetime2](7) NULL,
-	[Exception] [nvarchar](MAX) NULL,
-	[ExecutionTime] [numeric] NULL,
-) ON [PRIMARY]
+    [Id]            BIGINT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    [TransactionId] NVARCHAR(MAX) NULL,
+    [ServerId]      NVARCHAR(MAX) NULL,
+    [ClientId]      NVARCHAR(MAX) NULL,
+    [HttpMethod]    NVARCHAR(16) NULL,
+    [HttpPath]      NVARCHAR(MAX) NULL,
+    [HttpStatusCode] INT NULL,
+    [ActionDescriptor] NVARCHAR(MAX) NULL,
+    [RemoteAddress] NVARCHAR(128) NULL,
+    [JsonRequest]   NVARCHAR(MAX) NULL,
+    [JsonResponse]  NVARCHAR(MAX) NULL,
+    [TimeStamp]     DATETIME2(7) NULL,
+    [Exception]     NVARCHAR(MAX) NULL,
+    [ExecutionTime] FLOAT NULL
+);
+
+CREATE INDEX IX_Trace_TimeStamp     ON [dbo].[Trace]([TimeStamp]);
+CREATE INDEX IX_Trace_ClientId      ON [dbo].[Trace]([ClientId]);
+CREATE INDEX IX_Trace_TransactionId ON [dbo].[Trace]([TransactionId]);
+CREATE INDEX IX_Trace_HttpStatusCode ON [dbo].[Trace]([HttpStatusCode]);
 ```
-From version 4.1.0 onwards, table creation is handled automatically, in case it is missing on the SQL instance.
+The library ensures the trace table exists on startup (SQL Server).
 
-Remember to populate the **TraceDb** key within the SQL connection strings config file:
+## Configuration
+**appsettings.json**
 
-```xml
+```json
+{
   "ConnectionStrings": {
-    "TraceDb": "Server=(***;Database=***;Trusted_Connection=True;MultipleActiveResultSets=true"
-  },
+    "TraceDb": "Server=YOUR_SERVER;Database=YOUR_DATABASE;Trusted_Connection=True;TrustServerCertificate=True"
+  }
+}
+```
+
+## Sample usage
+
+```csharp
+// Program.cs (.NET 6+)
+var builder = WebApplication.CreateBuilder(args);
+
+// Register OpenSharpTrace with SQL Server persistence
+builder.Services.RegisterOpenSharpTrace(builder.Configuration);
+
+var app = builder.Build();
+app.MapControllers();
+app.Run();
 ```
 
 ## Contributing
@@ -150,8 +177,8 @@ If you'd like to contribute, please fork, fix, commit and send a pull request fo
  * [Fork the repository](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo)
  * [Open an issue](https://github.com/engineering87/OpenSharpTrace/issues) if you encounter a bug or have a suggestion for improvements/features
 
-### Licensee
+## License
 OpenSharpTrace source code is available under MIT License, see license in the source.
 
-### Contact
+## Contact
 Please contact at francesco.delre[at]protonmail.com for any details.
